@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Land Registry</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+</head>
+<body>
+  <h1>Land Registry</h1>
+  <p>Interact with the Land Registry smart contract deployed on Ganache.</p>
+
+  <!-- Create Account -->
+  <div>
+    <h3>Create Account</h3>
+    <button id="createAccount">Create Account</button>
+    <p id="createAccountStatus"></p>
+  </div>
+
+  <!-- Deposit -->
+  <div>
+    <h3>Deposit Funds</h3>
+    <input type="text" id="depositAmount" placeholder="Enter amount in ETH">
+    <button id="deposit">Deposit</button>
+    <p id="depositStatus"></p>
+  </div>
+
+  <!-- Withdraw -->
+  <div>
+    <h3>Withdraw Funds</h3>
+    <input type="text" id="withdrawAmount" placeholder="Enter amount in ETH">
+    <button id="withdraw">Withdraw</button>
+    <p id="withdrawStatus"></p>
+  </div>
+
+  <!-- Transfer -->
+  <div>
+    <h3>Transfer Funds</h3>
+    <input type="text" id="transferTo" placeholder="Recipient Address">
+    <input type="text" id="transferAmount" placeholder="Enter amount in ETH">
+    <button id="transfer">Transfer</button>
+    <p id="transferStatus"></p>
+  </div>
+
+  <!-- Get Balance -->
+  <div>
+    <h3>Get Balance</h3>
+    <button id="getBalance">Check Balance</button>
+    <p id="balance"></p>
+  </div>
+
+  <script>
+    const contractAddress = "0xB11370E61f8fCD42D679a2cC8d425DdFCd5b9F96"; // Replace with your contract address
+    const abi = [/* Insert ABI Array Here */];
+
+    let web3, contract, account;
+
+    window.addEventListener('load', async () => {
+      // Check if Web3 is available
+      if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+        try {
+          // Request account access
+          await ethereum.request({ method: 'eth_requestAccounts' });
+          const accounts = await web3.eth.getAccounts();
+          account = accounts[0];
+          console.log("Connected account:", account);
+
+          contract = new web3.eth.Contract(abi, contractAddress);
+
+          // Setup event listeners
+          setupEventListeners();
+        } catch (error) {
+          console.error("User denied account access:", error);
+        }
+      } else {
+        alert('Please install MetaMask to use this app.');
+      }
+    });
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Create Account
+      document.getElementById('createAccount').addEventListener('click', async () => {
+        try {
+          await contract.methods.createAccount().send({ from: account });
+          document.getElementById('createAccountStatus').innerText = "Account created successfully!";
+        } catch (error) {
+          document.getElementById('createAccountStatus').innerText = Error: ${error.message};
+        }
+      });
+
+      // Deposit Funds
+      document.getElementById('deposit').addEventListener('click', async () => {
+        const amount = document.getElementById('depositAmount').value;
+        try {
+          await contract.methods.deposit().send({ from: account, value: web3.utils.toWei(amount, "ether") });
+          document.getElementById('depositStatus').innerText = "Deposit successful!";
+        } catch (error) {
+          document.getElementById('depositStatus').innerText = Error: ${error.message};
+        }
+      });
+
+      // Withdraw Funds
+      document.getElementById('withdraw').addEventListener('click', async () => {
+        const amount = document.getElementById('withdrawAmount').value;
+        try {
+          await contract.methods.withdraw(web3.utils.toWei(amount, "ether")).send({ from: account });
+          document.getElementById('withdrawStatus').innerText = "Withdrawal successful!";
+        } catch (error) {
+          document.getElementById('withdrawStatus').innerText = Error: ${error.message};
+        }
+      });
+
+      // Transfer Funds
+      document.getElementById('transfer').addEventListener('click', async () => {
+        const to = document.getElementById('transferTo').value;
+        const amount = document.getElementById('transferAmount').value;
+        try {
+          await contract.methods.transfer(to, web3.utils.toWei(amount, "ether")).send({ from: account });
+          document.getElementById('transferStatus').innerText = "Transfer successful!";
+        } catch (error) {
+          document.getElementById('transferStatus').innerText = Error: ${error.message};
+        }
+      });
+
+      // Get Balance
+      document.getElementById('getBalance').addEventListener('click', async () => {
+        try {
+          const balance = await contract.methods.getBalance().call({ from: account });
+          document.getElementById('balance').innerText = Your balance: ${web3.utils.fromWei(balance, "ether")} ETH;
+        } catch (error) {
+          document.getElementById('balance').innerText = Error: ${error.message};
+        }
+      });
+    }
+  </script>
+</body>
+</html>
